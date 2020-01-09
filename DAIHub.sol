@@ -262,13 +262,13 @@ contract DAIHub is ERC20Mintable, Ownable {
         uint256 _cash = cash();
 
         if(amount <= _cash) {
-            DAI.transfer(msg.sender, amount);
+            require(DAI.transfer(msg.sender, amount));
         }
         else {
-            DAI.transfer(msg.sender, _cash);
+            require(DAI.transfer(msg.sender, _cash));
             amount -= _cash;
-            uint256 i = 0;
-            while(amount > 0) {
+            
+            for(uint256 i = 0; i < proxies.length && amount > 0; i++) {
                 _cash = proxy(proxies[i]).totalValue();
                 if(_cash == 0) continue;
                 if(amount <= _cash) {
@@ -278,7 +278,6 @@ contract DAIHub is ERC20Mintable, Ownable {
                 else {
                     proxy(proxies[i]).withdraw(to, _cash);
                     amount -= _cash;
-                    i++;
                 }
             }
             require(amount == 0);
