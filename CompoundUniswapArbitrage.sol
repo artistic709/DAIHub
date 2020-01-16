@@ -41,6 +41,7 @@ contract arbitrage1 is borrowTokenFallBack {
 
     constructor() public {
         dai.approve(address(UniDai), uint256(-1));
+        dai.approve(address(daihub), uint256(-1));
     }
 
     // dai -> uniswap -> cdai -> redeem -> dai
@@ -71,6 +72,7 @@ contract arbitrage2 is borrowTokenFallBack {
     constructor() public {
         cDai.approve(address(UniCDai),uint256(-1));
         dai.approve(address(cDai), uint256(-1));
+        dai.approve(address(daihub), uint256(-1));
     }
 
     function receiveToken(address, address, uint256 amount, uint256, bytes calldata) external {
