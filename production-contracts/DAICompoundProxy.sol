@@ -114,7 +114,7 @@ contract ERC20 {
     * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
     * Beware that changing an allowance with this method brings the risk that someone may use both the old
     * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
-    * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
+    * race condition is to first reduce the spender"s allowance to 0 and set the desired value afterwards:
     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
     * @param spender The address which will spend the funds.
     * @param value The amount of tokens to be spent.
@@ -148,25 +148,18 @@ contract ERC20 {
 
 }
 
-contract IERC20 is ERC20 {
-    function mint(address receiver, uint256 depositAmount) external returns (uint256 mintAmount);
-    function burn(address receiver, uint256 burnAmount) external returns (uint256 loanAmountPaid);
-    function tokenPrice() external view returns (uint256 price);
-    function assetBalanceOf(address _owner) external view returns (uint256);
+contract CERC20 is ERC20 {
+    function mint(uint mintAmount) external returns (uint);
+    function redeemUnderlying(uint redeemAmount) external returns (uint);
+    function balanceOfUnderlying(address owner) external returns (uint);
 }
 
-contract proxy {
-    function totalValue() external returns(uint256);
-    function totalValueStored() external view returns(uint256);
-    function deposit(uint256 amount) external returns(bool);
-    function withdraw(address to, uint256 amount) external returns(bool);
-    function isProxy() external returns(bool);
-}
 
-contract DAIFulcrumProxy is Ownable {
+
+contract DAICompoundProxy is Ownable {
     using SafeMath for uint256;
 
-    IERC20 constant IDAI = IERC20(0x493C57C4763932315A328269E1ADaD09653B9081);
+    CERC20 constant CDAI = CERC20(0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643);
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
     address constant hub = address(0xbeef);
@@ -175,14 +168,14 @@ contract DAIFulcrumProxy is Ownable {
     uint256 public totalValueStored;
     uint256 public reserve;
     uint256 public reserveRate;
-
+    
     modifier onlyHub() {
         require(msg.sender == hub);
         _;
     }
 
     constructor(address _wallet, uint256 _reserveRate) public {
-        DAI.approve(address(IDAI), uint256(-1));
+        DAI.approve(address(CDAI), uint256(-1));
         wallet = _wallet;
         reserveRate = _reserveRate;
     }
@@ -194,14 +187,12 @@ contract DAIFulcrumProxy is Ownable {
     function deposit(uint256 amount) external onlyHub {
         totalValueStored = updateTotalValue().add(amount);
         require(DAI.transferFrom(hub, address(this), amount));
-        require(IDAI.mint(address(this), DAI.balanceOf(address(this))) > 0);
+        require(CDAI.mint(amount) == 0);
     }
 
     function withdraw(address to, uint256 amount) external onlyHub {
         totalValueStored = updateTotalValue().sub(amount);
-
-        uint256 burnAmount = amount.mul(1e18).div(IDAI.tokenPrice());
-        require(IDAI.burn(address(this), burnAmount.add(1)) > 0);
+        require(CDAI.redeemUnderlying(amount) == 0);
         require(DAI.transfer(to, amount));
     }
 
@@ -210,8 +201,8 @@ contract DAIFulcrumProxy is Ownable {
     }
 
     function updateTotalValue() internal returns(uint256) {
-        
-        uint256 newBalance = IDAI.assetBalanceOf(address(this));
+        if(CDAI.balanceOf(address(this)) <= 10) return 0;
+        uint256 newBalance = CDAI.balanceOfUnderlying(address(this));
         uint256 reserveAdded = newBalance.sub(totalValueStored).mul(reserveRate).div(1e18);
         reserve = reserve.add(reserveAdded);
         totalValueStored = newBalance.sub(reserve);
@@ -230,8 +221,7 @@ contract DAIFulcrumProxy is Ownable {
     function claimReserve(uint256 amount) external onlyOwner {
         updateTotalValue();
         reserve = reserve.sub(amount);
-        uint256 burnAmount = amount.mul(1e18).div(IDAI.tokenPrice());
-        require(IDAI.burn(address(this), burnAmount.add(1)) > 0);
+        require(CDAI.redeemUnderlying(amount) == 0);
         require(DAI.transfer(wallet, amount));
     }
 
