@@ -203,6 +203,13 @@ contract DAIHub is ERC20Mintable, Ownable {
         }
     }
 
+    function totalValueStored() external view returns(uint256 sum) {
+        sum = cash();
+        for(uint256 i = 0; i < proxies.length; i++){
+            sum = sum.add(proxy(proxies[i]).totalValueStored());
+        }
+    }
+
     //cash value of an user's deposit
     function balanceOfUnderlying(address who) public returns(uint256) {
         return balanceOf(who).mul(totalValue()).div(totalSupply());
