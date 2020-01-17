@@ -343,6 +343,7 @@ contract DAIHub is ERC20Mintable, Ownable {
     constructor(address[] memory _proxies) public {
         for(uint256 i = 0; i < _proxies.length; i++){
             proxies.push(_proxies[i]);
+            isProxy[_proxies[i]] = true;
             DAI.approve(_proxies[i], uint256(-1));
         }
         repayRate = 1.003e18;
