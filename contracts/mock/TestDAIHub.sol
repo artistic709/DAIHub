@@ -3,7 +3,5 @@ pragma solidity ^0.5.15;
 import '../DAIHub.sol';
 
 contract TestDAIHub is DAIHub {
-  function setDAI(address _dai) external {
-    DAI = ERC20(_dai);
-  }
+    constructor(address[] memory _proxies, address _dai) public DAIHub(_proxies, _dai) {}
 }

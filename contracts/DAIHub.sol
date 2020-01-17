@@ -28,15 +28,23 @@ contract DAIHub is ERC20Mintable, Ownable {
     string public symbol = "hDAI";
 
     //constructor
-    constructor(address[] memory _proxies) public {
+    constructor(address[] memory _proxies, address _dai) public {
+        DAI = ERC20(_dai);
         for (uint256 i = 0; i < _proxies.length; i++) {
             proxies.push(_proxies[i]);
             DAI.approve(_proxies[i], uint256(-1));
         }
     }
 
-    function exchangeRate() public returns (uint256 rate) {
-        rate = totalValue().div(totalSupply());
+    function exchangeRate() public view returns (uint256 rate) {
+        rate = totalValueStored().div(totalSupply());
+    }
+
+    function totalValueStored() public view returns (uint256 sum) {
+        sum = cash();
+        for (uint256 i = 0; i < proxies.length; i++) {
+            sum = sum.add(Proxy(proxies[i]).totalValueStored());
+        }
     }
 
     //calculate value from all proxies and cash
@@ -162,7 +170,7 @@ contract DAIHub is ERC20Mintable, Ownable {
 
     //invest cash to a proxy
     function invest(address _proxy, uint256 amount) external onlyOwner {
-        require(isProxy[_proxy]);
+        require(isProxy[_proxy], "Unexpected Proxy");
         Proxy(_proxy).deposit(amount);
     }
 
