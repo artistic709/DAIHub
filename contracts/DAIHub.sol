@@ -177,7 +177,7 @@ contract DAIHub is ERC20Mintable, Ownable {
 
     //redeem investment from a proxy
     function redeem(address _proxy, uint256 amount) external onlyOwner {
-        require(isProxy[_proxy]);
+        require(isProxy[_proxy], "Unexpected Proxy");
         Proxy(_proxy).withdraw(address(this), amount);
     }
 

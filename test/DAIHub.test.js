@@ -21,9 +21,15 @@ describe('DAIHub', () => {
     const [wallet] = await ethers.signers()
     account = await wallet.getAddress()
     testToken = await deployContract(wallet, TestTokenArtifact, ['Test', 'TST', 18])
-    mockProxy1 = await deployContract(wallet, MockProxyArtifact)
-    mockProxy2 = await deployContract(wallet, MockProxyArtifact)
+    mockProxy1 = await deployContract(wallet, MockProxyArtifact, [testToken.address])
+    mockProxy2 = await deployContract(wallet, MockProxyArtifact, [testToken.address])
     hub = await deployContract(wallet, DAIHubArtifact, [[mockProxy1.address, mockProxy2.address], testToken.address])
+
+    const setHubProxy1 = await mockProxy1.setHub(hub.address)
+    await setHubProxy1.wait()
+
+    const setHubProxy2 = await mockProxy2.setHub(hub.address)
+    await setHubProxy2.wait()
 
     const approveTx = await testToken.approve(hub.address, constants.MaxUint256)
     await approveTx.wait()
@@ -73,18 +79,22 @@ describe('DAIHub', () => {
     expect(totalValueStoredNow).to.equal(totalValueStored.sub(amount.div(2)))
   })
 
-//   it('should calculate total value in this hub', async () => {
-//     const amount = utils.bigNumberify('1000000000000000000')
-//     const depositTx = await hub.deposit(account, amount)
-//     await depositTx.wait()
-//     const invest1Tx = await hub.invest(mockProxy1.address, amount.div(2))
-//     await invest1Tx.wait()
-//     const invest2Tx = await hub.invest(mockProxy2.address, amount.div(2))
-//     await invest2Tx.wait()
+  it('should calculate total value in this hub', async () => {
+    const amount = utils.bigNumberify('1000000000000000000')
+    const depositTx = await hub.deposit(account, amount)
+    await depositTx.wait()
+    const invest1Tx = await hub.invest(mockProxy1.address, amount.div(2))
+    await invest1Tx.wait()
+    const invest2Tx = await hub.invest(mockProxy2.address, amount.div(2))
+    await invest2Tx.wait()
 
-//     const totalValueStored = await hub.totalValueStored()
+    const proxy1TotalValueStored = await mockProxy1.totalValueStored()
+    const proxy2TotalValueStored = await mockProxy2.totalValueStored()
+    const totalValueStored = await hub.totalValueStored()
 
-//     expect(totalValueStored).to.equal(amount)
-//   })
+    expect(proxy1TotalValueStored).to.equal(amount.div(2))
+    expect(proxy2TotalValueStored).to.equal(amount.div(2))
+    expect(totalValueStored).to.equal(amount)
+  })
 })
 

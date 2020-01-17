@@ -1,13 +1,24 @@
 pragma solidity 0.5.15;
 
-import '../SafeMath.sol';
-import '../interface/Proxy.sol';
+import "../SafeMath.sol";
+import "../interface/Proxy.sol";
+import "../ERC20.sol";
 
 contract MockProxy is Proxy {
     using SafeMath for uint256;
 
     uint256 internal _totalValue;
     uint256 internal _totalValueStored;
+    ERC20 public DAI;
+    address public hub;
+
+    constructor(address _dai) public {
+      DAI = ERC20(_dai);
+    }
+
+    function setHub(address _hub) external {
+      hub = _hub;
+    }
 
     function totalValue() external returns (uint256) {
       return _totalValue;
@@ -29,6 +40,7 @@ contract MockProxy is Proxy {
       require(amount >= 0);
       _totalValue = _totalValue.add(amount);
       _totalValueStored = _totalValueStored.add(amount);
+      DAI.transferFrom(hub, address(this), amount);
       return true;
     }
 
@@ -36,6 +48,7 @@ contract MockProxy is Proxy {
       require(to != address(0) && amount >= 0);
       _totalValue = _totalValue.sub(amount);
       _totalValueStored = _totalValueStored.sub(amount);
+      DAI.transfer(hub, amount);
       return true;
     }
 
