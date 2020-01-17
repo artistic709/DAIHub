@@ -32,6 +32,7 @@ contract DAIHub is ERC20Mintable, Ownable {
         DAI = ERC20(_dai);
         for (uint256 i = 0; i < _proxies.length; i++) {
             proxies.push(_proxies[i]);
+            isProxy[_proxies[i]] = true;
             DAI.approve(_proxies[i], uint256(-1));
         }
     }

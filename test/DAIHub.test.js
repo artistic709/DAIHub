@@ -41,37 +41,37 @@ describe('DAIHub', () => {
     await expect(hub.withdraw(account, amount)).to.emit(hub, 'Transfer').withArgs(account, constants.AddressZero, amount)
   })
 
-  // it('should redistribute DAI to Proxy in order to investment', async () => {
-  //   const amount = utils.bigNumberify('1000000000000000000')
-  //   const depositTx = await hub.deposit(account, amount)
-  //   await depositTx.wait()
+  it('should redistribute DAI to Proxy in order to investment', async () => {
+    const amount = utils.bigNumberify('1000000000000000000')
+    const depositTx = await hub.deposit(account, amount)
+    await depositTx.wait()
 
-  //   const totalValueStored = await mockProxy1.totalValueStored()
+    const totalValueStored = await mockProxy1.totalValueStored()
 
-  //   const investTx = await hub.invest(mockProxy1.address, amount.div(2))
-  //   await investTx.wait()
+    const investTx = await hub.invest(mockProxy1.address, amount.div(2))
+    await investTx.wait()
 
-  //   const totalValueStoredNow = await mockProxy1.totalValueStored()
+    const totalValueStoredNow = await mockProxy1.totalValueStored()
 
-  //   expect(totalValueStoredNow).to.equal(totalValueStored.add(amount.div(2)))
-  // })
+    expect(totalValueStoredNow).to.equal(totalValueStored.add(amount.div(2)))
+  })
 
-//   it('should redeem DAI from proxy', async () => {
-//     const amount = utils.bigNumberify('1000000000000000000')
-//     const depositTx = await hub.deposit(account, amount)
-//     await depositTx.wait()
-//     const investTx = await hub.invest(mockProxy1.address, amount.div(2))
-//     await investTx.wait()
+  it('should redeem DAI from proxy', async () => {
+    const amount = utils.bigNumberify('1000000000000000000')
+    const depositTx = await hub.deposit(account, amount)
+    await depositTx.wait()
+    const investTx = await hub.invest(mockProxy1.address, amount.div(2))
+    await investTx.wait()
 
-//     const totalValueStored = await mockProxy1.totalValueStored()
+    const totalValueStored = await mockProxy1.totalValueStored()
 
-//     const redeemTx = await hub.redeem(mockProxy1.address, amount.div(2))
-//     await redeemTx.wait()
+    const redeemTx = await hub.redeem(mockProxy1.address, amount.div(2))
+    await redeemTx.wait()
 
-//     const totalValueStoredNow = await mockProxy1.totalValueStored()
+    const totalValueStoredNow = await mockProxy1.totalValueStored()
 
-//     expect(totalValueStoredNow).to.equal(totalValueStored.add(amount.div(2)))
-//   })
+    expect(totalValueStoredNow).to.equal(totalValueStored.sub(amount.div(2)))
+  })
 
 //   it('should calculate total value in this hub', async () => {
 //     const amount = utils.bigNumberify('1000000000000000000')
