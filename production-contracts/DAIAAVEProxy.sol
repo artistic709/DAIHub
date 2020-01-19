@@ -1,4 +1,4 @@
-pragma solidity ^0.5.8;
+pragma solidity ^0.5.16;
 
 library SafeMath {
 
@@ -162,8 +162,9 @@ contract DAIAAVEProxy is Ownable {
     AERC20 constant ADAI = AERC20(0xfC1E690f61EFd961294b3e1Ce3313fBD8aa4f85d);
     Aave constant AAVE = Aave(0x398eC7346DcD622eDc5ae82352F02bE94C62d119);
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+    address constant core = address(0x3dfd23A6c5E8BbcFc9581d2E864a68feb6a076d3);
 
-    address constant hub = address(0xbeef);
+    address constant hub = address(0xaC7e326c2e66161feA0a6dc31Efba564b9164b04);
     address internal wallet;
 
     uint256 public totalValueStored;
@@ -177,7 +178,7 @@ contract DAIAAVEProxy is Ownable {
     }
 
     constructor(address _wallet, uint256 _reserveRate) public {
-        DAI.approve(address(AAVE), uint256(-1));
+        DAI.approve(core, uint256(-1));
         wallet = _wallet;
         reserveRate = _reserveRate;
     }
@@ -217,6 +218,10 @@ contract DAIAAVEProxy is Ownable {
     function setReserveRate(uint256 _reserveRate) external onlyOwner {
         require(_reserveRate <= 2e17);
         reserveRate = _reserveRate;
+    }
+
+    function setReferralCode(uint16 _referralCode) external onlyOwner {
+        referralCode = _referralCode;
     }
 
     function claimReserve(uint256 amount) external onlyOwner {

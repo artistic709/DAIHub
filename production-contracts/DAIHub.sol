@@ -1,4 +1,4 @@
-pragma solidity ^0.5.10;
+pragma solidity ^0.5.16;
 
 library SafeMath {
 
@@ -185,7 +185,7 @@ contract DAIHub is ERC20Mintable, Ownable {
     uint256 public mature;
     uint256 public repayRate; // amount to repay = borrow * repayRate / 1e18
 
-    ERC20 DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+    ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
     mapping(address => bool) public isProxy;
 
@@ -346,7 +346,7 @@ contract DAIHub is ERC20Mintable, Ownable {
             isProxy[_proxies[i]] = true;
             DAI.approve(_proxies[i], uint256(-1));
         }
-        repayRate = 1.003e18;
+        repayRate = 1.002e18;
         decimals = 18;
         name = "DAIHub";
         symbol = "hDAI";

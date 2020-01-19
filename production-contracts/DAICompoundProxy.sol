@@ -1,4 +1,4 @@
-pragma solidity ^0.5.8;
+pragma solidity ^0.5.16;
 
 library SafeMath {
 
@@ -154,15 +154,13 @@ contract CERC20 is ERC20 {
     function balanceOfUnderlying(address owner) external returns (uint);
 }
 
-
-
 contract DAICompoundProxy is Ownable {
     using SafeMath for uint256;
 
     CERC20 constant CDAI = CERC20(0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643);
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
-    address constant hub = address(0xbeef);
+    address constant hub = address(0xaC7e326c2e66161feA0a6dc31Efba564b9164b04);
     address internal wallet;
 
     uint256 public totalValueStored;

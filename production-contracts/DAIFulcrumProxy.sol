@@ -1,4 +1,4 @@
-pragma solidity ^0.5.8;
+pragma solidity ^0.5.16;
 
 library SafeMath {
 
@@ -169,7 +169,7 @@ contract DAIFulcrumProxy is Ownable {
     IERC20 constant IDAI = IERC20(0x493C57C4763932315A328269E1ADaD09653B9081);
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
-    address constant hub = address(0xbeef);
+    address constant hub = address(0xaC7e326c2e66161feA0a6dc31Efba564b9164b04);
     address internal wallet;
 
     uint256 public totalValueStored;
