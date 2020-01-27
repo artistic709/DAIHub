@@ -173,8 +173,8 @@ contract borrowTokenFallBack {
 contract proxy {
     function totalValue() external returns(uint256);
     function totalValueStored() external view returns(uint256);
-    function deposit(uint256 amount) external returns(bool);
-    function withdraw(address to, uint256 amount) external returns(bool);
+    function deposit(uint256 amount) external;
+    function withdraw(address to, uint256 amount) external;
     function isProxy() external returns(bool);
 }
 

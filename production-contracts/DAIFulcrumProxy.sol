@@ -155,21 +155,13 @@ contract IERC20 is ERC20 {
     function assetBalanceOf(address _owner) external view returns (uint256);
 }
 
-contract proxy {
-    function totalValue() external returns(uint256);
-    function totalValueStored() external view returns(uint256);
-    function deposit(uint256 amount) external returns(bool);
-    function withdraw(address to, uint256 amount) external returns(bool);
-    function isProxy() external returns(bool);
-}
-
 contract DAIFulcrumProxy is Ownable {
     using SafeMath for uint256;
 
     IERC20 constant IDAI = IERC20(0x493C57C4763932315A328269E1ADaD09653B9081);
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
-    address constant hub = address(0xaC7e326c2e66161feA0a6dc31Efba564b9164b04);
+    address constant hub = address(0x22547806F3ED406399Bb03aa94F5F7faA8ff2019);
     address internal wallet;
 
     uint256 public totalValueStored;
@@ -199,7 +191,6 @@ contract DAIFulcrumProxy is Ownable {
 
     function withdraw(address to, uint256 amount) external onlyHub {
         totalValueStored = updateTotalValue().sub(amount);
-
         uint256 burnAmount = amount.mul(1e18).div(IDAI.tokenPrice());
         require(IDAI.burn(address(this), burnAmount.add(1)) > 0);
         require(DAI.transfer(to, amount));
@@ -210,7 +201,6 @@ contract DAIFulcrumProxy is Ownable {
     }
 
     function updateTotalValue() internal returns(uint256) {
-        
         uint256 newBalance = IDAI.assetBalanceOf(address(this));
         uint256 reserveAdded = newBalance.sub(totalValueStored).mul(reserveRate).div(1e18);
         reserve = reserve.add(reserveAdded);

@@ -164,7 +164,7 @@ contract DAIAAVEProxy is Ownable {
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
     address constant core = address(0x3dfd23A6c5E8BbcFc9581d2E864a68feb6a076d3);
 
-    address constant hub = address(0xaC7e326c2e66161feA0a6dc31Efba564b9164b04);
+    address constant hub = address(0x22547806F3ED406399Bb03aa94F5F7faA8ff2019);
     address internal wallet;
 
     uint256 public totalValueStored;

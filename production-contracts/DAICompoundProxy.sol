@@ -160,7 +160,7 @@ contract DAICompoundProxy is Ownable {
     CERC20 constant CDAI = CERC20(0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643);
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
-    address constant hub = address(0xaC7e326c2e66161feA0a6dc31Efba564b9164b04);
+    address constant hub = address(0x22547806F3ED406399Bb03aa94F5F7faA8ff2019);
     address internal wallet;
 
     uint256 public totalValueStored;
