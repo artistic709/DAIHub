@@ -164,7 +164,7 @@ contract DAIAAVEProxy is Ownable {
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
     address constant core = address(0x3dfd23A6c5E8BbcFc9581d2E864a68feb6a076d3);
 
-    address constant hub = address(0x22547806F3ED406399Bb03aa94F5F7faA8ff2019);
+    address constant hub = address(0xf6377c5B47410BDce0086864067787367D07A1c7);
     address internal wallet;
 
     uint256 public totalValueStored;
@@ -205,7 +205,7 @@ contract DAIAAVEProxy is Ownable {
 
     function updateTotalValue() internal returns(uint256) {
         uint256 newBalance = ADAI.balanceOf(address(this));
-        uint256 reserveAdded = newBalance.sub(totalValueStored).mul(reserveRate).div(1e18);
+        uint256 reserveAdded = newBalance.sub(totalValueStored).sub(reserve).mul(reserveRate).div(1e18);
         reserve = reserve.add(reserveAdded);
         totalValueStored = newBalance.sub(reserve);
         return totalValueStored;

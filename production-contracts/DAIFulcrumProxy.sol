@@ -161,7 +161,7 @@ contract DAIFulcrumProxy is Ownable {
     IERC20 constant IDAI = IERC20(0x493C57C4763932315A328269E1ADaD09653B9081);
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
-    address constant hub = address(0x22547806F3ED406399Bb03aa94F5F7faA8ff2019);
+    address constant hub = address(0xf6377c5B47410BDce0086864067787367D07A1c7);
     address internal wallet;
 
     uint256 public totalValueStored;
@@ -202,7 +202,7 @@ contract DAIFulcrumProxy is Ownable {
 
     function updateTotalValue() internal returns(uint256) {
         uint256 newBalance = IDAI.assetBalanceOf(address(this));
-        uint256 reserveAdded = newBalance.sub(totalValueStored).mul(reserveRate).div(1e18);
+        uint256 reserveAdded = newBalance.sub(totalValueStored).sub(reserve).mul(reserveRate).div(1e18);
         reserve = reserve.add(reserveAdded);
         totalValueStored = newBalance.sub(reserve);
         return totalValueStored;

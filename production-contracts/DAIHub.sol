@@ -63,6 +63,21 @@ contract Ownable {
     }
 }
 
+contract ReentrancyGuard {
+    uint256 private _guardCounter;
+
+    constructor () internal {
+        _guardCounter = 1;
+    }
+
+    modifier nonReentrant() {
+        _guardCounter += 1;
+        uint256 localCounter = _guardCounter;
+        _;
+        require(localCounter == _guardCounter);
+    }
+}
+
 contract ERC20 {
     using SafeMath for uint256;
 
@@ -167,7 +182,7 @@ contract ERC20Mintable is ERC20 {
 }
 
 contract borrowTokenFallBack {
-    function receiveToken(address caller, address token, uint256 amount, uint256 amountToRepay, bytes calldata data) external;
+    function receiveToken(address caller, address token, uint256 amount, uint256 amountToRepay, bytes calldata data) external returns(bytes4);
 }
 
 contract proxy {
@@ -178,12 +193,14 @@ contract proxy {
     function isProxy() external returns(bool);
 }
 
-contract DAIHub is ERC20Mintable, Ownable {
+contract DAIHub is ERC20Mintable, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
 
     address public pendingProxy;
     uint256 public mature;
     uint256 public repayRate; // amount to repay = borrow * repayRate / 1e18
+
+    bytes4 constant BORROW_TOKEN_ACCEPTED = 0x58ca01a1; //bytes4(keccak256("receiveToken(address,address,uint256,uint256,bytes)"))
 
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
 
@@ -203,7 +220,7 @@ contract DAIHub is ERC20Mintable, Ownable {
         }
     }
 
-    function totalValueStored() external view returns(uint256 sum) {
+    function totalValueStored() public view returns(uint256 sum) {
         sum = cash();
         for(uint256 i = 0; i < proxies.length; i++){
             sum = sum.add(proxy(proxies[i]).totalValueStored());
@@ -211,8 +228,12 @@ contract DAIHub is ERC20Mintable, Ownable {
     }
 
     //cash value of an user's deposit
-    function balanceOfUnderlying(address who) public returns(uint256) {
+    function balanceOfUnderlying(address who) external returns(uint256 amount) {
         return balanceOf(who).mul(totalValue()).div(totalSupply());
+    }
+
+    function balanceOfUnderlyingStored(address who) external view returns(uint256 amount) {
+        return balanceOf(who).mul(totalValueStored()).div(totalSupply());
     }
 
     // cash in this contract
@@ -221,8 +242,7 @@ contract DAIHub is ERC20Mintable, Ownable {
     }
 
     // deposit money to this contract
-    function deposit(address to, uint256 amount) external returns(uint256 increased) {
-        
+    function deposit(address to, uint256 amount) external nonReentrant returns(uint256 increased) {
         if(totalSupply() > 0) {
             increased = totalSupply().mul(amount).div(totalValue());
             _mint(to, increased);
@@ -236,33 +256,35 @@ contract DAIHub is ERC20Mintable, Ownable {
     }
 
     //withdraw money by burning `amount` share
-    function withdraw(address to, uint256 amount) external {
+    function withdraw(address to, uint256 amount) external nonReentrant {
         uint256 withdrawal = amount.mul(totalValue()).div(totalSupply());
         _burn(msg.sender, amount);
         _withdraw(to, withdrawal);
     }
 
     //withdraw certain `amount` of money
-    function withdrawUnderlying(address to, uint256 amount) external {
+    function withdrawUnderlying(address to, uint256 amount) external nonReentrant {
         uint256 shareToBurn = amount.mul(totalSupply()).div(totalValue()).add(1);
         _burn(msg.sender, shareToBurn);
         _withdraw(to, amount);
     }
 
     //borrow `amount` token, call by EOA
-    function borrow(address to, uint256 amount, bytes calldata data) external {
+    function borrow(address to, uint256 amount, bytes calldata data) external nonReentrant {
         uint256 repayAmount = amount.mul(repayRate).div(1e18);
         _withdraw(to, amount);
-        borrowTokenFallBack(to).receiveToken(msg.sender, address(DAI), amount, repayAmount, data);
+        require(borrowTokenFallBack(to).receiveToken(msg.sender, address(DAI), amount, repayAmount, data) == BORROW_TOKEN_ACCEPTED);
         require(DAI.transferFrom(to, address(this), repayAmount));
+        emit Borrow(to, amount);
     }
 
     //borrow `amount` token, call by contract
-    function borrow(uint256 amount) external {
+    function borrow(uint256 amount) external nonReentrant {
         uint256 repayAmount = amount.mul(repayRate).div(1e18);
         _withdraw(msg.sender, amount);
-        borrowTokenFallBack(msg.sender).receiveToken(msg.sender, address(DAI), amount, repayAmount, bytes(""));
+        require(borrowTokenFallBack(msg.sender).receiveToken(msg.sender, address(DAI), amount, repayAmount, bytes("")) == BORROW_TOKEN_ACCEPTED);
         require(DAI.transferFrom(msg.sender, address(this), repayAmount));
+        emit Borrow(msg.sender, amount);
     }
 
     function _withdraw(address to, uint256 amount) internal {
@@ -324,7 +346,7 @@ contract DAIHub is ERC20Mintable, Ownable {
 
     //set new repay rate
     function setRepayRate(uint256 newRepayRate) external onlyOwner {
-        require(newRepayRate <= 1.05e18); //repayRate must be less than 105%
+        require(newRepayRate >= 1e18 && newRepayRate <= 1.05e18); //repayRate must be between 100% and 105%
         repayRate = newRepayRate;
     }
 
